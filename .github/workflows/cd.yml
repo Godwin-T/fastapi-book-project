@@ -22,7 +22,7 @@ jobs:
 
       - name: Deploy to AWS
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@52.24.79.29 << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@34.218.242.33 << 'EOF'
             cd /home/ubuntu/app || git clone https://github.com/Godwin-T/fastapi-book-project.git app && cd app
             git pull origin main
             if sudo lsof -i :8000; then
