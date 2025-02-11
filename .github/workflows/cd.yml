@@ -22,7 +22,7 @@ jobs:
 
       - name: Deploy to AWS
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@54.213.9.216 << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@52.24.79.29 << 'EOF'
             cd /home/ubuntu/app || git clone https://github.com/Godwin-T/fastapi-book-project.git app && cd app
             git pull origin main
             docker build -t fastapi-app . && docker run -d -p 9000:9000 fastapi-app

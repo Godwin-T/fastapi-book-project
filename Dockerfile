@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy application code
 COPY api/ ./api/
 COPY core/ ./core/
-COPY ./tests/ ./tests/
+COPY tests/ ./tests
 COPY main.py .
 
 # Expose the port and run the application
