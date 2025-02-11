@@ -22,7 +22,7 @@ jobs:
 
       - name: Deploy to AWS
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@YOUR_AWS_IP << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@54.213.9.216 << 'EOF'
             cd /home/ubuntu/app || git clone https://github.com/Godwin-T/fastapi-book-project,git app && cd app
             git pull origin main
             docker-compose down
