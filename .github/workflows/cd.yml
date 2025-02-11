@@ -15,14 +15,19 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up SSH key
+        env: 
+          DEPLOY_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.AWS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          echo $DEPLOY_KEY > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
       - name: Deploy to AWS
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@52.24.79.29 << 'EOF'
+          ssh -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
             cd /home/ubuntu/app || git clone https://github.com/Godwin-T/fastapi-book-project.git app && cd app
             git pull origin main
             if sudo lsof -i :8000; then
