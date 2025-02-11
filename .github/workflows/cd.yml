@@ -16,7 +16,7 @@ jobs:
 
       - name: Set up SSH key
         env: 
-          DEPLOY_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
         run: |
           mkdir -p ~/.ssh
           echo $DEPLOY_KEY > ~/.ssh/id_rsa
