@@ -25,6 +25,6 @@ jobs:
           ssh -o StrictHostKeyChecking=no ubuntu@54.213.9.216 << 'EOF'
             cd /home/ubuntu/app || git clone https://github.com/Godwin-T/fastapi-book-project.git app && cd app
             git pull origin main
-            docker-compose down
-            docker-compose up -d --build
+            docker compose down
+            docker compose up -d --build
           EOF
