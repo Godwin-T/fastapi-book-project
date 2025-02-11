@@ -19,8 +19,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
+# Copy specific application code
+COPY api/ api/
+COPY core/ core/
+COPY main.py .
 
 # Create non-root user and switch to it
 RUN useradd -m appuser && chown -R appuser:appuser /app
