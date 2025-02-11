@@ -19,8 +19,9 @@ jobs:
           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo $DEPLOY_KEY > ~/.ssh/id_rsa
+          echo "$DEPLOY_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to AWS
         env:
@@ -28,7 +29,10 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
-            cd /home/ubuntu/app || git clone https://github.com/Godwin-T/fastapi-book-project.git app && cd app
+            if [ ! -d "/home/ubuntu/app" ]; then
+              git clone https://github.com/Godwin-T/fastapi-book-project.git /home/ubuntu/app
+            fi
+            cd /home/ubuntu/app
             git pull origin main
             if sudo lsof -i :8000; then
               docker stop $(docker container ls --filter "publish=8000" -q)
