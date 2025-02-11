@@ -25,7 +25,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no ubuntu@52.24.79.29 << 'EOF'
             cd /home/ubuntu/app || git clone https://github.com/Godwin-T/fastapi-book-project.git app && cd app
             git pull origin main
-            if lsof -i:8000; then
+            if sudo lsof -i :8000; then
               docker stop $(docker container ls --filter "publish=8000" -q)
             fi
             docker build -t fastapi-app . && docker run -d -p 8000:8000 fastapi-app
