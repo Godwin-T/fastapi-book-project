@@ -28,7 +28,7 @@ jobs:
         run: |
           # Replace this with your actual deployment script
           echo "Deploying application..."
-name: AWS Deployment
+name: EC2 Docker Deployment
 
 on:
   push:
@@ -37,17 +37,12 @@ on:
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   ECR_REPO: ${{ secrets.ECR_REPO }}
-  ECS_CLUSTER: ${{ secrets.ECS_CLUSTER }}
-  ECS_SERVICE: ${{ secrets.ECS_SERVICE }}
+  EC2_HOST: ${{ secrets.EC2_HOST }}
+  EC2_SSH_USER: ${{ secrets.EC2_SSH_USER }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
 
     steps:
     - name: Checkout code
@@ -56,8 +51,8 @@ jobs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
-        role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
-        role-session-name: GitHubActions-Deploy
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
     - name: Login to Amazon ECR
@@ -71,10 +66,15 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPO:latest .
         docker push $ECR_REGISTRY/$ECR_REPO:latest
 
-    - name: Deploy to ECS Fargate
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+    - name: Deploy to EC2 via SSH
+      uses: appleboy/ssh-action@v1
       with:
-        task-definition: ${{ secrets.ECS_TASK_DEFINITION }}
-        service: ${{ env.ECS_SERVICE }}
-        cluster: ${{ env.ECS_CLUSTER }}
-        wait-for-service-stability: true
+        host: ${{ env.EC2_HOST }}
+        username: ${{ env.EC2_SSH_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+          docker pull $ECR_REGISTRY/$ECR_REPO:latest
+          docker stop book-api || true
+          docker rm book-api || true
+          docker run -d --name book-api -p 8000:8000 $ECR_REGISTRY/$ECR_REPO:latest
