@@ -17,13 +17,8 @@ jobs:
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.AWS_SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
+          echo "${{ secrets.AWS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H YOUR_AWS_IP >> ~/.ssh/known_hosts
-
-      - name: Test SSH Connection
-        run: ssh -i ~/.ssh/id_rsa ubuntu@54.213.9.216 "echo SSH Connection Successful"
-
 
       - name: Deploy to AWS
         run: |
