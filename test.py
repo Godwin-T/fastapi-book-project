@@ -7,3 +7,4 @@ response = requests.get(url)
 print(response)
 
 print(response.json())
+
