@@ -50,7 +50,6 @@ on:
 
 jobs:
   deploy:
-    name: Deploy Application
     runs-on: ubuntu-latest
     # Add timeout minutes to prevent hanging
     timeout-minutes: 15
