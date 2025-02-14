@@ -82,7 +82,8 @@ jobs:
               git clone --depth 1 https://github.com/Godwin-T/fastapi-book-project.git /home/ubuntu/app
             fi
             cd /home/ubuntu/app
-            git pull origin main
+            git fetch origin
+            git reset --hard origin/main
             cat main.py
             ENDBASH
             
