@@ -83,6 +83,7 @@ jobs:
             fi
             cd /home/ubuntu/app
             git pull origin main
+            echo main.py
             ENDBASH
             
             # Add timeout and error handling for Docker operations
