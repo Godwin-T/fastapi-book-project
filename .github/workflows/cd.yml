@@ -1,19 +1,64 @@
-name: Deployment Pipeline
+# name: Deployment Pipeline
 
+# on:
+#   push:
+#     branches:
+#       - main  # Deploy on push to main branch
+
+# jobs:
+#   deploy:
+#     name: Deploy Application
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
+
+#       - name: Set up SSH key
+#         env: 
+#           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+#         run: |
+#           mkdir -p ~/.ssh
+#           echo "$DEPLOY_KEY" > ~/.ssh/id_rsa
+#           chmod 600 ~/.ssh/id_rsa
+#           ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+#       - name: Deploy to AWS
+#         env:
+#           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+#           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+#         run: |
+#           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
+#             if [ ! -d "/home/ubuntu/app" ]; then
+#               git clone https://github.com/Godwin-T/fastapi-book-project.git /home/ubuntu/app
+#             fi
+#             cd /home/ubuntu/app
+#             git pull origin main
+#             if sudo lsof -i :8000; then
+#               docker stop $(docker container ls --filter "publish=8000" -q)
+#             fi
+#             docker build -t fastapi-app . && docker run -d -p 8000:8000 fastapi-app
+#           EOF
+
+
+
+name: Deployment Pipeline
 on:
   push:
     branches:
-      - main  # Deploy on push to main branch
+      - main
 
 jobs:
   deploy:
     name: Deploy Application
     runs-on: ubuntu-latest
-
+    # Add timeout minutes to prevent hanging
+    timeout-minutes: 15
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+      
       - name: Set up SSH key
         env: 
           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
@@ -22,20 +67,42 @@ jobs:
           echo "$DEPLOY_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
-
+      
       - name: Deploy to AWS
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        # Add timeout to SSH command
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -o ConnectTimeout=30 $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
+            set -e  # Exit on any error
+            
+            # Add timeout to git operations
+            timeout 300 bash << 'ENDBASH'
             if [ ! -d "/home/ubuntu/app" ]; then
-              git clone https://github.com/Godwin-T/fastapi-book-project.git /home/ubuntu/app
+              git clone --depth 1 https://github.com/Godwin-T/fastapi-book-project.git /home/ubuntu/app
             fi
             cd /home/ubuntu/app
             git pull origin main
+            ENDBASH
+            
+            # Add timeout and error handling for Docker operations
             if sudo lsof -i :8000; then
-              docker stop $(docker container ls --filter "publish=8000" -q)
+              docker stop $(docker container ls --filter "publish=8000" -q) || true
             fi
-            docker build -t fastapi-app . && docker run -d -p 8000:8000 fastapi-app
+            
+            # Add timeouts to Docker commands
+            timeout 300 docker build -t fastapi-app .
+            timeout 60 docker run -d -p 8000:8000 fastapi-app
+            
+            # Verify deployment
+            for i in {1..30}; do
+              if curl -s http://localhost:8000/health; then
+                echo "Application successfully deployed"
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "Failed to verify deployment"
+            exit 1
           EOF
